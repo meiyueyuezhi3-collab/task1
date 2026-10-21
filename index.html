@@ -812,3 +812,357 @@
     }
 
     function showDateJournals(dateStr) {
+        const container = document.getElementById('selected-date-journals');
+        document.getElementById('selected-date-title').innerText = `📅 ${dateStr} のお世話・観察記録`;
+
+        const journals = allJournals.filter(j => j.date === dateStr);
+        if (journals.length === 0) {
+            container.innerHTML = `<div class="card" style="text-align:center; color:#666;">この日の記録はありません。</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        journals.forEach(data => {
+            container.innerHTML += `
+                <div class="card">
+                    <div class="journal-header">
+                        <span class="crop-badge">${escapeHtml(data.crop)}</span>
+                        <span class="journal-author">👤 ${escapeHtml(data.userName)}</span>
+                    </div>
+                    <div class="journal-meta">
+                        <span class="category-tag">${escapeHtml(data.category)}</span>
+                        ${data.harvestQty ? `<span style="color:#d97706; font-weight:bold;">収穫: ${data.harvestQty}</span>` : ''}
+                    </div>
+                    <div class="journal-content">${escapeHtml(data.notes)}</div>
+                </div>
+            `;
+        });
+    }
+
+    // ----------------------------------------
+    // 💬 相談掲示板 (画像圧縮付き)
+    // ----------------------------------------
+    function previewImage(event) {
+        const file = event.target.files[0];
+        const preview = document.getElementById('image-preview');
+
+        if (!file) {
+            preview.style.display = 'none';
+            currentBase64Image = "";
+            return;
+        }
+
+        // 画質調整・サイズ圧縮 (Canvas)
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                let scale = 1;
+                if (img.width > MAX_WIDTH) {
+                    scale = MAX_WIDTH / img.width;
+                }
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                currentBase64Image = canvas.toDataURL('image/jpeg', 0.7); // 70%品質で軽量化
+                preview.src = currentBase64Image;
+                preview.style.display = 'block';
+            };
+        };
+        reader.readAsDataURL(file);
+    }
+
+    const boardForm = document.getElementById('board-form');
+    boardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const userName = usernameInput.value.trim() || 'ななしの農家';
+        const crop = document.getElementById('board-crop').value.trim();
+        const title = document.getElementById('board-title').value.trim();
+        const content = document.getElementById('board-content').value.trim();
+
+        try {
+            await db.collection('qa_board').add({
+                userName: userName,
+                crop: crop,
+                title: title,
+                content: content,
+                imageUrl: currentBase64Image || null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                replies: []
+            });
+
+            alert('相談・質問を投稿しました！');
+            boardForm.reset();
+            document.getElementById('image-preview').style.display = 'none';
+            currentBase64Image = "";
+        } catch (error) {
+            console.error("掲示板投稿エラー: ", error);
+            alert('投稿に失敗しました。');
+        }
+    });
+
+    // 回答の追加
+    async function addReply(postId) {
+        const replyInput = document.getElementById(`reply-input-${postId}`);
+        const text = replyInput.value.trim();
+        if (!text) return;
+
+        const userName = usernameInput.value.trim() || 'ななしの農家';
+
+        try {
+            const postRef = db.collection('qa_board').doc(postId);
+            await postRef.update({
+                replies: firebase.firestore.FieldValue.arrayUnion({
+                    userName: userName,
+                    content: text,
+                    createdAt: new Date().toLocaleDateString('ja-JP')
+                })
+            });
+            replyInput.value = '';
+        } catch (error) {
+            console.error("回答エラー: ", error);
+            alert('回答の追加に失敗しました。');
+        }
+    }
+
+    // 掲示板のリアルタイム受信
+    db.collection('qa_board')
+        .orderBy('createdAt', 'desc')
+        .onSnapshot((snapshot) => {
+            const boardList = document.getElementById('board-posts-list');
+            boardList.innerHTML = '';
+
+            if (snapshot.empty) {
+                boardList.innerHTML = '<div class="card" style="text-align:center; color:#666;">現在質問はありません。</div>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const postId = doc.id;
+
+                let repliesHtml = '';
+                if (data.replies && data.replies.length > 0) {
+                    data.replies.forEach(r => {
+                        repliesHtml += `
+                            <div class="reply-item">
+                                <span class="reply-author">💬 ${escapeHtml(r.userName)}</span>: ${escapeHtml(r.content)}
+                            </div>
+                        `;
+                    });
+                } else {
+                    repliesHtml = '<div style="font-size:0.8rem; color:#888;">まだ回答はありません。アドバイスを書いてみましょう！</div>';
+                }
+
+                boardList.innerHTML += `
+                    <div class="card board-card">
+                        <div class="journal-header">
+                            <span class="crop-badge" style="background-color:var(--info-color);">${escapeHtml(data.crop)}</span>
+                            <span class="journal-author">👤 ${escapeHtml(data.userName)}</span>
+                        </div>
+                        <h4 style="font-size:1rem; margin-bottom:6px; color:#1d3557;">${escapeHtml(data.title)}</h4>
+                        <p class="journal-content">${escapeHtml(data.content)}</p>
+                        ${data.imageUrl ? `<img src="${data.imageUrl}" class="board-img" onclick="window.open('${data.imageUrl}')" alt="相談画像">` : ''}
+
+                        <div class="reply-box">
+                            <h5 style="font-size:0.85rem; margin-bottom:6px; color:var(--primary-color);">💬 回答・アドバイス一覧</h5>
+                            ${repliesHtml}
+                            <div style="display:flex; gap:6px; margin-top:8px;">
+                                <input type="text" id="reply-input-${postId}" placeholder="回答・アドバイスを入力..." style="padding:6px; font-size:0.85rem;">
+                                <button onclick="addReply('${postId}')" style="background:var(--primary-color); color:white; border:none; padding:6px 12px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:0.8rem;">送信</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+    // ----------------------------------------
+    // 🐛 病害虫ガイドデータ & 検索
+    // ----------------------------------------
+    const pestData = [
+        {
+            name: "アブラムシ",
+            category: "害虫",
+            symptom: "新芽や葉の裏に群がり、吸汁して植物を弱らせます。ウイルス病を媒介することも。",
+            organic: "粘着テープで取り除くか、薄めた石鹸水・牛乳スプレーを散布。天敵のテントウムシを呼び込む。",
+            chemical: "ベニカXファインスプレー、オルトラン粒剤"
+        },
+        {
+            name: "うどんこ病",
+            category: "病気",
+            symptom: "葉の表面に白い粉をふいたようなカビが発生し、光合成を阻害します。",
+            organic: "重曹水（500〜1000倍）や薄めた酢（酢1：水300）を定期的に散布。風通しを良くする。",
+            chemical: "ダコニール1000、カリグリーン"
+        },
+        {
+            name: "トマトの尻腐れ病",
+            category: "生理障害",
+            symptom: "トマトの実の底（お尻）の部分が黒く変色して腐ったようになります。",
+            organic: "カルシウム不足や水切れが原因。乾燥を防ぎ、カルシウム肥料（苦土石灰や卵の殻）を補給。",
+            chemical: "カルシウム配合の葉面散布剤"
+        },
+        {
+            name: "ハダニ",
+            category: "害虫",
+            symptom: "葉の裏に寄生し、葉がかすり状に白く抜けたり黄色くなります。乾燥した環境を好みます。",
+            organic: "水に弱いため、葉の裏側にしっかり水やり（葉水）をする。コーヒー液の散布。",
+            chemical: "バロックフロアブル、粘着くん"
+        },
+        {
+            name: "ハモグリバエ (お絵かき虫)",
+            category: "害虫",
+            symptom: "葉の内部を幼虫が食べ進み、白い曲線の筋模様（絵を描いたような跡）ができます。",
+            organic: "白い筋の先端にいる幼虫をつまんで潰す。黄色粘着シートを設置。",
+            chemical: "ベニカベジフルスプレー"
+        }
+    ];
+
+    function renderPests(items) {
+        const listEl = document.getElementById('pest-list');
+        listEl.innerHTML = '';
+
+        items.forEach(p => {
+            listEl.innerHTML += `
+                <div class="card pest-card">
+                    <div class="pest-title">
+                        <span>🐛 ${escapeHtml(p.name)}</span>
+                        <span class="pest-tag">${escapeHtml(p.category)}</span>
+                    </div>
+                    <div style="font-size:0.9rem; margin-top:6px;"><strong>【症状】</strong> ${escapeHtml(p.symptom)}</div>
+                    <div class="pest-section-title">🌱 オーガニック・無農薬対策</div>
+                    <div style="font-size:0.88rem;">${escapeHtml(p.organic)}</div>
+                    <div class="pest-section-title">🧪 薬剤・化学的対策</div>
+                    <div style="font-size:0.88rem;">${escapeHtml(p.chemical)}</div>
+                </div>
+            `;
+        });
+    }
+
+    function filterPests() {
+        const query = document.getElementById('pest-search').value.toLowerCase();
+        const filtered = pestData.filter(p => 
+            p.name.toLowerCase().includes(query) || 
+            p.symptom.toLowerCase().includes(query) ||
+            p.category.toLowerCase().includes(query)
+        );
+        renderPests(filtered);
+    }
+    renderPests(pestData); // 初期描画
+
+    // ----------------------------------------
+    // リアルタイムデータ同期 & 表示（日誌）
+    // ----------------------------------------
+    db.collection('crop_journals')
+        .orderBy('date', 'desc')
+        .onSnapshot((snapshot) => {
+            allJournals = [];
+            const myJournalList = document.getElementById('my-journal-list');
+            const communityJournalList = document.getElementById('community-journal-list');
+            const rankingList = document.getElementById('ranking-list');
+
+            myJournalList.innerHTML = '';
+            communityJournalList.innerHTML = '';
+            
+            const currentUserName = usernameInput.value.trim() || 'ななしの農家';
+            const cropCounts = {};
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                data.id = doc.id;
+                allJournals.push(data);
+
+                if (data.crop) {
+                    cropCounts[data.crop] = (cropCounts[data.crop] || 0) + 1;
+                }
+
+                const harvestText = data.harvestQty ? ` ｜ 収穫: ${data.harvestQty}` : '';
+
+                const createCardHTML = (isMine) => `
+                    <div class="card journal-item">
+                        <div class="journal-header">
+                            <span class="crop-badge">${escapeHtml(data.crop)}</span>
+                            <span class="journal-author">👤 ${escapeHtml(data.userName || '匿名')}</span>
+                        </div>
+                        <div class="journal-meta">
+                            <span>📅 ${escapeHtml(data.date)}</span>
+                            <span class="category-tag">${escapeHtml(data.category)}</span>
+                            ${harvestText ? `<span style="color:#d97706; font-weight:bold;">${harvestText}</span>` : ''}
+                        </div>
+                        <div class="journal-content">${escapeHtml(data.notes)}</div>
+                        ${isMine ? `
+                            <div class="action-btns">
+                                <button class="btn-action btn-edit" onclick="editJournal('${doc.id}', '${escapeHtml(data.date)}', '${escapeHtml(data.crop)}', '${escapeHtml(data.category)}', '${data.harvestQty \vert{}\vert{} ''}', '${escapeHtml(data.notes)}')">編集</button>
+                                <button class="btn-action btn-delete" onclick="deleteJournal('${doc.id}')">削除</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                if (data.userName === currentUserName) {
+                    myJournalList.innerHTML += createCardHTML(true);
+                }
+                communityJournalList.innerHTML += createCardHTML(data.userName === currentUserName);
+            });
+
+            if (!myJournalList.innerHTML) {
+                myJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">あなたの投稿はまだありません。</div>';
+            }
+
+            renderRanking(cropCounts);
+            
+            // カレンダーが表示されている場合は更新
+            if (document.getElementById('calendar-tab').classList.contains('active')) {
+                renderCalendar();
+            }
+        });
+
+    function renderRanking(cropCounts) {
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = '';
+
+        const sortedCrops = Object.keys(cropCounts).sort((a, b) => cropCounts[b] - cropCounts[a]);
+
+        if (sortedCrops.length === 0) {
+            rankingList.innerHTML = '<div class="card" style="text-align:center; color:#666;">データがありません。</div>';
+            return;
+        }
+
+        sortedCrops.forEach((crop, index) => {
+            const rank = index + 1;
+            let badgeClass = 'rank-other';
+            if (rank === 1) badgeClass = 'rank-1';
+            else if (rank === 2) badgeClass = 'rank-2';
+            else if (rank === 3) badgeClass = 'rank-3';
+
+            const item = document.createElement('div');
+            item.className = 'ranking-item';
+            item.innerHTML = `
+                <div class="ranking-badge ${badgeClass}">${rank}</div>
+                <div style="font-weight:bold; flex:1;">${escapeHtml(crop)}</div>
+                <div style="font-size:0.85rem; background-color:var(--accent-color); color:var(--primary-color); padding:4px 10px; border-radius:12px; font-weight:bold;">${cropCounts[crop]} 記録</div>
+            `;
+            rankingList.appendChild(item);
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+</script>
+
+</body>
+</html>
