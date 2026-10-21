@@ -61,6 +61,19 @@
             padding: 15px;
         }
 
+        /* 接続状態警告バナー */
+        .status-banner {
+            display: none;
+            background-color: #ffdddd;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
         /* ユーザー設定 */
         .user-setting-box {
             background-color: var(--accent-color);
@@ -205,9 +218,7 @@
             display: none;
         }
 
-        /* ----------------------------------
-           📅 カレンダー スタイル
-        ---------------------------------- */
+        /* カレンダー */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -294,9 +305,7 @@
             max-width: 100%;
         }
 
-        /* ----------------------------------
-           💬 掲示板 スタイル (写真付き)
-        ---------------------------------- */
+        /* 掲示板 */
         .preview-img {
             max-width: 100%;
             max-height: 200px;
@@ -343,9 +352,7 @@
             font-size: 0.8rem;
         }
 
-        /* ----------------------------------
-           🐛 病害虫ガイド スタイル
-        ---------------------------------- */
+        /* 病害虫ガイド */
         .pest-search-box {
             margin-bottom: 15px;
         }
@@ -378,7 +385,7 @@
             margin-top: 8px;
         }
 
-        /* 🏆 ランキング */
+        /* ランキング */
         .ranking-container {
             display: flex;
             flex-direction: column;
@@ -412,7 +419,7 @@
         .rank-3 { background-color: #219ebc; }
         .rank-other { background-color: #8d99ae; }
 
-        /* 共通日誌カード */
+        /* 日誌カード共通 */
         .journal-header {
             display: flex;
             justify-content: space-between;
@@ -477,7 +484,6 @@
         .btn-edit { background-color: var(--warning-color); color: #333; }
         .btn-delete { background-color: var(--danger-color); color: white; }
 
-        /* レスポンシブ調整 */
         @media (max-width: 600px) {
             body { padding: 10px 10px 70px 10px; }
             .form-row { flex-direction: column; gap: 0; }
@@ -493,7 +499,9 @@
 </header>
 
 <div class="container">
-    <!-- ユーザー名設定 -->
+    <!-- エラー・警告バナー -->
+    <div id="status-banner" class="status-banner"></div>
+
     <div class="user-setting-box">
         <span>👤 ユーザー名:</span>
         <input type="text" id="username" placeholder="例: トモリ農園" value="ななしの農家">
@@ -501,12 +509,12 @@
 
     <!-- タブメニュー -->
     <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('my-tab')">📝 日誌をつける</button>
-        <button class="tab-btn" onclick="switchTab('calendar-tab')">📅 カレンダー</button>
-        <button class="tab-btn" onclick="switchTab('board-tab')">💬 相談掲示板</button>
-        <button class="tab-btn" onclick="switchTab('community-tab')">🌍 みんなの記録</button>
-        <button class="tab-btn" onclick="switchTab('ranking-tab')">🏆 人気作物</button>
-        <button class="tab-btn" onclick="switchTab('pest-tab')">🐛 病害虫ガイド</button>
+        <button class="tab-btn active" onclick="switchTab('my-tab', this)">📝 日誌をつける</button>
+        <button class="tab-btn" onclick="switchTab('calendar-tab', this)">📅 カレンダー</button>
+        <button class="tab-btn" onclick="switchTab('board-tab', this)">💬 相談掲示板</button>
+        <button class="tab-btn" onclick="switchTab('community-tab', this)">🌍 みんなの記録</button>
+        <button class="tab-btn" onclick="switchTab('ranking-tab', this)">🏆 人気作物</button>
+        <button class="tab-btn" onclick="switchTab('pest-tab', this)">🐛 病害虫ガイド</button>
     </div>
 
     <!-- TAB 1: 自分の日誌投稿・記録一覧 -->
@@ -558,7 +566,7 @@
         <div id="my-journal-list"></div>
     </div>
 
-    <!-- TAB 2: カレンダー機能 -->
+    <!-- TAB 2: カレンダー -->
     <div id="calendar-tab" class="tab-content">
         <div class="card">
             <div class="calendar-header">
@@ -575,7 +583,7 @@
         </div>
     </div>
 
-    <!-- TAB 3: 困った人のための掲示板 (写真投稿可能) -->
+    <!-- TAB 3: 相談掲示板 -->
     <div id="board-tab" class="tab-content">
         <div class="card">
             <h2 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--info-color);">❓ 栽培の悩みを写真付きで質問する</h2>
@@ -610,32 +618,30 @@
         <div id="board-posts-list"></div>
     </div>
 
-    <!-- TAB 4: コミュニティ（みんなの記録） -->
+    <!-- TAB 4: コミュニティ -->
     <div id="community-tab" class="tab-content">
         <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">🌍 全ユーザーのリアルタイム栽培日誌</h3>
         <div id="community-journal-list"></div>
     </div>
 
-    <!-- TAB 5: 人気作物ランキング -->
+    <!-- TAB 5: ランキング -->
     <div id="ranking-tab" class="tab-content">
         <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">🏆 今みんなが育てている作物ランキング</h3>
         <div id="ranking-list" class="ranking-container"></div>
     </div>
 
-    <!-- TAB 6: 病害虫対処法ガイド -->
+    <!-- TAB 6: 病害虫ガイド -->
     <div id="pest-tab" class="tab-content">
         <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--danger-color);">🐛 病害虫・トラブル対処法ガイド</h3>
-        
         <div class="pest-search-box">
             <input type="text" id="pest-search" placeholder="🔍 病気や虫の名前・症状で検索 (例: うどんこ病、葉が黄色)..." oninput="filterPests()">
         </div>
-
         <div id="pest-list"></div>
     </div>
 </div>
 
 <script>
-    // Firebase設定
+    // ご提示いただいた Firebase Config 設定
     const firebaseConfig = {
         apiKey: "AIzaSyAoY1uvCLn6DpjIrYMm-l5qZ4spRNVlDxQ",
         authDomain: "task1-9c89b.firebaseapp.com",
@@ -645,13 +651,20 @@
         appId: "1:920132069499:web:09cad0185af88a4e2adade"
     };
 
+    // Firebase 初期化
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 今日の日付を初期セット
+    // エラーバナー表示用関数
+    function showErrorBanner(message) {
+        const banner = document.getElementById('status-banner');
+        banner.innerHTML = message;
+        banner.style.display = 'block';
+    }
+
+    // 初期化設定
     document.getElementById('date').valueAsDate = new Date();
 
-    // ユーザー名の保持
     const usernameInput = document.getElementById('username');
     if (localStorage.getItem('crop_app_username')) {
         usernameInput.value = localStorage.getItem('crop_app_username');
@@ -660,28 +673,26 @@
         localStorage.setItem('crop_app_username', usernameInput.value.trim() || 'ななしの農家');
     });
 
-    // グローバル変数
     let allJournals = [];
     let currentCalYear = new Date().getFullYear();
     let currentCalMonth = new Date().getMonth();
     let currentBase64Image = "";
 
-    // タブ切り替え
-    function switchTab(tabId) {
+    // タブ切り替え処理
+    window.switchTab = function(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) targetTab.classList.add('active');
+        if (btnElement) btnElement.classList.add('active');
 
         if (tabId === 'calendar-tab') {
             renderCalendar();
         }
-    }
+    };
 
-    // ----------------------------------------
-    // 📝 日誌保存・編集・削除処理
-    // ----------------------------------------
+    // 日誌フォーム送信
     const journalForm = document.getElementById('journal-form');
     journalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -716,11 +727,13 @@
             resetForm();
         } catch (error) {
             console.error("保存エラー: ", error);
-            alert('保存に失敗しました。');
+            const errMsg = `⚠️ Firebaseへの保存に失敗しました。<br><strong>理由:</strong> ${error.message}`;
+            showErrorBanner(errMsg);
+            alert(`【保存エラーが発生しました】\n\n詳細: ${error.message}\n\n※Firebase Consoleで「Firestore Database」が作成済みか、および「ルール」でアクセス権限が許可されているか確認してください。`);
         }
     });
 
-    function resetForm() {
+    window.resetForm = function() {
         document.getElementById('editing-id').value = '';
         document.getElementById('crop').value = '';
         document.getElementById('harvest-qty').value = '';
@@ -729,38 +742,41 @@
         document.getElementById('form-title').innerText = '新規日誌の記入';
         document.getElementById('submit-btn').innerText = '日誌を保存する';
         document.getElementById('cancel-btn').style.display = 'none';
-    }
+    };
 
-    function editJournal(id, date, crop, category, harvestQty, notes) {
-        document.getElementById('editing-id').value = id;
-        document.getElementById('date').value = date;
-        document.getElementById('crop').value = crop;
-        document.getElementById('category').value = category;
-        document.getElementById('harvest-qty').value = harvestQty || '';
-        document.getElementById('notes').value = notes;
+    window.startEdit = function(id) {
+        const item = allJournals.find(j => j.id === id);
+        if (!item) return;
+
+        document.getElementById('editing-id').value = item.id;
+        document.getElementById('date').value = item.date;
+        document.getElementById('crop').value = item.crop;
+        document.getElementById('category').value = item.category;
+        document.getElementById('harvest-qty').value = item.harvestQty || '';
+        document.getElementById('notes').value = item.notes;
 
         document.getElementById('form-title').innerText = '✏️ 日誌の編集';
         document.getElementById('submit-btn').innerText = '変更を更新する';
         document.getElementById('cancel-btn').style.display = 'block';
 
-        switchTab('my-tab');
+        const firstTabBtn = document.querySelector('.tab-btn');
+        switchTab('my-tab', firstTabBtn);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    };
 
-    async function deleteJournal(id) {
+    window.deleteJournal = async function(id) {
         if (confirm('本当にこの記録を削除しますか？')) {
             try {
                 await db.collection('crop_journals').doc(id).delete();
             } catch (error) {
                 console.error("削除エラー:", error);
+                alert("削除に失敗しました: " + error.message);
             }
         }
-    }
+    };
 
-    // ----------------------------------------
-    // 📅 カレンダー描画機能
-    // ----------------------------------------
-    function changeMonth(offset) {
+    // カレンダー機能
+    window.changeMonth = function(offset) {
         currentCalMonth += offset;
         if (currentCalMonth < 0) {
             currentCalMonth = 11;
@@ -770,7 +786,7 @@
             currentCalYear++;
         }
         renderCalendar();
-    }
+    };
 
     function renderCalendar() {
         const titleEl = document.getElementById('calendar-month-year');
@@ -787,12 +803,10 @@
         const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
         const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
 
-        // 空白セル
         for (let i = 0; i < firstDay; i++) {
             gridEl.innerHTML += `<div class="calendar-day-cell empty"></div>`;
         }
 
-        // 日付セル
         for (let day = 1; day <= daysInMonth; day++) {
             const dateString = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayJournals = allJournals.filter(j => j.date === dateString);
@@ -811,7 +825,7 @@
         }
     }
 
-    function showDateJournals(dateStr) {
+    window.showDateJournals = function(dateStr) {
         const container = document.getElementById('selected-date-journals');
         document.getElementById('selected-date-title').innerText = `📅 ${dateStr} のお世話・観察記録`;
 
@@ -837,12 +851,10 @@
                 </div>
             `;
         });
-    }
+    };
 
-    // ----------------------------------------
-    // 💬 相談掲示板 (画像圧縮付き)
-    // ----------------------------------------
-    function previewImage(event) {
+    // 掲示板 & 画像圧縮
+    window.previewImage = function(event) {
         const file = event.target.files[0];
         const preview = document.getElementById('image-preview');
 
@@ -852,7 +864,6 @@
             return;
         }
 
-        // 画質調整・サイズ圧縮 (Canvas)
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = new Image();
@@ -870,13 +881,13 @@
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-                currentBase64Image = canvas.toDataURL('image/jpeg', 0.7); // 70%品質で軽量化
+                currentBase64Image = canvas.toDataURL('image/jpeg', 0.7);
                 preview.src = currentBase64Image;
                 preview.style.display = 'block';
             };
         };
         reader.readAsDataURL(file);
-    }
+    };
 
     const boardForm = document.getElementById('board-form');
     boardForm.addEventListener('submit', async (e) => {
@@ -904,12 +915,11 @@
             currentBase64Image = "";
         } catch (error) {
             console.error("掲示板投稿エラー: ", error);
-            alert('投稿に失敗しました。');
+            alert('投稿に失敗しました: ' + error.message);
         }
     });
 
-    // 回答の追加
-    async function addReply(postId) {
+    window.addReply = async function(postId) {
         const replyInput = document.getElementById(`reply-input-${postId}`);
         const text = replyInput.value.trim();
         if (!text) return;
@@ -928,11 +938,10 @@
             replyInput.value = '';
         } catch (error) {
             console.error("回答エラー: ", error);
-            alert('回答の追加に失敗しました。');
+            alert('回答の追加に失敗しました: ' + error.message);
         }
-    }
+    };
 
-    // 掲示板のリアルタイム受信
     db.collection('qa_board')
         .orderBy('createdAt', 'desc')
         .onSnapshot((snapshot) => {
@@ -982,11 +991,12 @@
                     </div>
                 `;
             });
+        }, (error) => {
+            console.error("掲示板読み込みエラー:", error);
+            showErrorBanner(`⚠️ Firebaseの読み込み制限が発生しています。<br><strong>エラー理由:</strong> ${error.message}`);
         });
 
-    // ----------------------------------------
-    // 🐛 病害虫ガイドデータ & 検索
-    // ----------------------------------------
+    // 病害虫ガイド
     const pestData = [
         {
             name: "アブラムシ",
@@ -1046,7 +1056,7 @@
         });
     }
 
-    function filterPests() {
+    window.filterPests = function() {
         const query = document.getElementById('pest-search').value.toLowerCase();
         const filtered = pestData.filter(p => 
             p.name.toLowerCase().includes(query) || 
@@ -1054,19 +1064,16 @@
             p.category.toLowerCase().includes(query)
         );
         renderPests(filtered);
-    }
-    renderPests(pestData); // 初期描画
+    };
+    renderPests(pestData);
 
-    // ----------------------------------------
-    // リアルタイムデータ同期 & 表示（日誌）
-    // ----------------------------------------
+    // リアルタイム日誌データ同期
     db.collection('crop_journals')
         .orderBy('date', 'desc')
         .onSnapshot((snapshot) => {
             allJournals = [];
             const myJournalList = document.getElementById('my-journal-list');
             const communityJournalList = document.getElementById('community-journal-list');
-            const rankingList = document.getElementById('ranking-list');
 
             myJournalList.innerHTML = '';
             communityJournalList.innerHTML = '';
@@ -1099,7 +1106,7 @@
                         <div class="journal-content">${escapeHtml(data.notes)}</div>
                         ${isMine ? `
                             <div class="action-btns">
-                                <button class="btn-action btn-edit" onclick="editJournal('${doc.id}', '${escapeHtml(data.date)}', '${escapeHtml(data.crop)}', '${escapeHtml(data.category)}', '${data.harvestQty \vert{}\vert{} ''}', '${escapeHtml(data.notes)}')">編集</button>
+                                <button class="btn-action btn-edit" onclick="startEdit('${doc.id}')">編集</button>
                                 <button class="btn-action btn-delete" onclick="deleteJournal('${doc.id}')">削除</button>
                             </div>
                         ` : ''}
@@ -1118,10 +1125,12 @@
 
             renderRanking(cropCounts);
             
-            // カレンダーが表示されている場合は更新
             if (document.getElementById('calendar-tab').classList.contains('active')) {
                 renderCalendar();
             }
+        }, (error) => {
+            console.error("Firestoreリアルタイム同期エラー:", error);
+            showErrorBanner(`⚠️ Firebaseデータベースの接続・アクセスでエラーが発生しました。<br><strong>エラー理由:</strong> ${error.message}`);
         });
 
     function renderRanking(cropCounts) {
