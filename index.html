@@ -3,79 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>農作物 栽培日誌</title>
+    <title>スマート農作物 栽培日誌 & コミュニティ</title>
     <!-- Firebase SDK (v10 compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <style>
         :root {
-            --bg-color: #e8f5e9;
-            --primary-color: #2e7d32;
-            --primary-hover: #1b5e20;
-            --accent-color: #81c784;
+            --bg-color: #f0f7f4;
+            --primary-color: #2d6a4f;
+            --primary-light: #52b788;
+            --primary-hover: #1b4332;
+            --accent-color: #d8f3dc;
             --card-bg: #ffffff;
-            --text-color: #2c3e50;
+            --text-color: #1b263b;
+            --danger-color: #e63946;
+            --warning-color: #e9c46a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            margin: 0;
-            padding: 20px;
+            padding-bottom: 70px; /* スマホ用固定ナビゲーションの余白 */
+            line-height: 1.6;
+        }
+
+        /* ヘッダー */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
+            padding: 15px;
         }
 
-        header {
+        /* タブナビゲーション */
+        .tab-nav {
+            display: flex;
+            background-color: white;
+            border-radius: 12px;
+            padding: 5px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 5px;
+            border: none;
+            background: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #666;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tab-btn.active {
             background-color: var(--primary-color);
             color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(45, 106, 79, 0.3);
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.8rem;
+        .tab-content {
+            display: none;
         }
 
+        .tab-content.active {
+            display: block;
+        }
+
+        /* カードデザイン */
         .card {
             background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            border-left: 6px solid var(--primary-color);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border-left: 5px solid var(--primary-color);
         }
 
-        .form-group {
+        /* ユーザー設定 */
+        .user-setting-box {
+            background-color: var(--accent-color);
+            padding: 12px 16px;
+            border-radius: 10px;
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .user-setting-box input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #b7e4c7;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        /* フォーム要素 */
+        .form-group {
+            margin-bottom: 14px;
         }
 
         label {
             display: block;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
             color: var(--primary-color);
         }
 
         input[type="text"],
+        input[type="number"],
         input[type="date"],
         select,
         textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #c8e6c9;
-            border-radius: 6px;
-            box-sizing: border-box;
+            padding: 12px;
+            border: 1.5px solid #d8f3dc;
+            border-radius: 8px;
             font-size: 1rem;
-            background-color: #f1f8e9;
+            background-color: #fafdfb;
+            transition: border-color 0.2s;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -84,129 +161,324 @@
             background-color: #fff;
         }
 
-        button.btn-submit {
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .btn-submit {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
+            padding: 14px;
+            border-radius: 8px;
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
             transition: background 0.2s;
+            box-shadow: 0 4px 6px rgba(45, 106, 79, 0.2);
         }
 
-        button.btn-submit:hover {
+        .btn-submit:hover {
             background-color: var(--primary-hover);
         }
 
+        .btn-cancel {
+            background-color: #8d99ae;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* ランキングセクション */
+        .ranking-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .ranking-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .rank-1 { background-color: #ffb703; }
+        .rank-2 { background-color: #fb8500; }
+        .rank-3 { background-color: #219ebc; }
+        .rank-other { background-color: #8d99ae; }
+
+        .ranking-name {
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .ranking-count {
+            font-size: 0.85rem;
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        /* タイムライン／日誌カード */
         .journal-item {
             position: relative;
+            border-left: 5px solid var(--primary-light);
         }
 
         .journal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e0e0e0;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .crop-badge {
-            background-color: var(--accent-color);
+            background-color: var(--primary-color);
             color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 15px;
             font-size: 0.85rem;
             font-weight: bold;
         }
 
-        .journal-date {
+        .journal-author {
+            font-size: 0.8rem;
             color: #666;
-            font-size: 0.9rem;
         }
 
-        .journal-category {
-            display: inline-block;
-            background-color: #c8e6c9;
+        .journal-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .category-tag {
+            background-color: var(--accent-color);
             color: var(--primary-color);
             padding: 2px 8px;
             border-radius: 4px;
-            font-size: 0.8rem;
-            margin-bottom: 8px;
             font-weight: bold;
         }
 
         .journal-content {
             white-space: pre-wrap;
+            margin-bottom: 12px;
             line-height: 1.5;
         }
 
-        .btn-delete {
-            background-color: #e57373;
-            color: white;
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 10px;
+        }
+
+        .btn-action {
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: pointer;
             font-size: 0.8rem;
-            margin-top: 10px;
+            font-weight: bold;
+            transition: opacity 0.2s;
         }
 
-        .btn-delete:hover {
-            background-color: #d32f2f;
+        .btn-edit {
+            background-color: var(--warning-color);
+            color: #333;
         }
 
-        .empty-message {
-            text-align: center;
-            color: #666;
-            padding: 20px;
+        .btn-delete {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        /* トラブル解決ガイド（知恵袋） */
+        .guide-item {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .guide-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .guide-desc {
+            font-size: 0.9rem;
+            color: #444;
+        }
+
+        /* レスポンシブ（スマホ向け調整） */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px 10px 70px 10px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .tab-btn {
+                font-size: 0.8rem;
+                padding: 8px 2px;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>🌱 農作物 栽培日誌</h1>
-    </header>
+<header>
+    <h1>🌱 スマート農作物 栽培日誌</h1>
+</header>
 
-    <!-- 日誌入力フォーム -->
-    <div class="card">
-        <h2>新しい日誌を記録</h2>
-        <form id="journal-form">
-            <div class="form-group">
-                <label for="date">日付</label>
-                <input type="date" id="date" required>
-            </div>
-            <div class="form-group">
-                <label for="crop">作物名</label>
-                <input type="text" id="crop" placeholder="例: ミニトマト、ナス、イチゴ" required>
-            </div>
-            <div class="form-group">
-                <label for="category">作業内容</label>
-                <select id="category">
-                    <option value="水やり">水やり</option>
-                    <option value="施肥（肥料）">施肥（肥料）</option>
-                    <option value="追肥・間引き">追肥・間引き</option>
-                    <option value="病害虫対策">病害虫対策</option>
-                    <option value="収穫">収穫</option>
-                    <option value="その他">その他（観察など）</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="notes">詳細メモ・成長記録</label>
-                <textarea id="notes" rows="4" placeholder="成長具合や気づいたことを入力..." required></textarea>
-            </div>
-            <button type="submit" class="btn-submit">日誌を保存する</button>
-        </form>
+<div class="container">
+    <!-- ユーザー名設定 -->
+    <div class="user-setting-box">
+        <span>👤 ユーザー名:</span>
+        <input type="text" id="username" placeholder="ニックネーム（例: トマト太郎）" value="ななしの農家">
     </div>
 
-    <!-- 記録一覧 -->
-    <h2>栽培記録一覧</h2>
-    <div id="journal-list"></div>
+    <!-- タブメニュー -->
+    <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('my-tab')">📝 日誌をつける</button>
+        <button class="tab-btn" onclick="switchTab('community-tab')">🌍 みんなの記録</button>
+        <button class="tab-btn" onclick="switchTab('ranking-tab')">🏆 人気作物</button>
+        <button class="tab-btn" onclick="switchTab('guide-tab')">💡 栽培の知恵袋</button>
+    </div>
+
+    <!-- TAB 1: 自分の日誌投稿・記録一覧 -->
+    <div id="my-tab" class="tab-content active">
+        <!-- 投稿・編集フォーム -->
+        <div class="card">
+            <h2 id="form-title" style="font-size: 1.1rem; margin-bottom: 12px; color: var(--primary-color);">新規日誌の記入</h2>
+            <form id="journal-form">
+                <input type="hidden" id="editing-id" value="">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date">日付</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="crop">作物名</label>
+                        <input type="text" id="crop" placeholder="例: ミニトマト、ナス" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">作業分類</label>
+                        <select id="category">
+                            <option value="水やり">💧 水やり</option>
+                            <option value="施肥・土作り">肥料・土作り</option>
+                            <option value="芽かき・手入れ">✂️ 芽かき・剪定</option>
+                            <option value="病害虫対策">🐛 病害虫対策</option>
+                            <option value="収穫">🧺 収穫</option>
+                            <option value="観察・その他">👀 観察・その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="harvest-qty">収穫量（任意）</label>
+                        <input type="number" id="harvest-qty" placeholder="例: 5 (個/kg)" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">詳細メモ・気づいた点</label>
+                    <textarea id="notes" rows="3" placeholder="葉の色、天候、水やりの量、害虫の有無などを記録..." required></textarea>
+                </div>
+
+                <button type="submit" id="submit-btn" class="btn-submit">日誌を保存する</button>
+                <button type="button" id="cancel-btn" class="btn-cancel" onclick="resetForm()">編集をキャンセル</button>
+            </form>
+        </div>
+
+        <!-- 自分の日誌一覧 -->
+        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">📖 自分の投稿履歴</h3>
+        <div id="my-journal-list"></div>
+    </div>
+
+    <!-- TAB 2: コミュニティ（みんなの記録） -->
+    <div id="community-tab" class="tab-content">
+        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">🌍 全ユーザーのリアルタイム栽培日誌</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">他の栽培者がどんなお世話をしているか参考にしてみましょう！</p>
+        <div id="community-journal-list"></div>
+    </div>
+
+    <!-- TAB 3: 人気作物ランキング -->
+    <div id="ranking-tab" class="tab-content">
+        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">🏆 今みんなが育てている作物ランキング</h3>
+        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">投稿数から算出された人気の作物一覧です。</p>
+        <div id="ranking-list" class="ranking-container"></div>
+    </div>
+
+    <!-- TAB 4: 栽培の課題解決ガイド（知恵袋） -->
+    <div id="guide-tab" class="tab-content">
+        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">💡 農業・園芸のよくある課題解決ガイド</h3>
+        
+        <div class="guide-item">
+            <div class="guide-title">💧 水やりの適切なタイミングは？</div>
+            <div class="guide-desc">「土の表面が乾いたら鉢底から水が流れ出るまでたっぷり」が基本です。朝のうちに与えることで、昼間の蒸れや病気の予防になります。</div>
+        </div>
+
+        <div class="guide-item">
+            <div class="guide-title">🐛 アブラムシ・害虫がついた時の対策</div>
+            <div class="guide-desc">初期段階であれば粘着テープで取り除くか、薄めた石鹸水や粘着質のシートを設置。風通しを良くして予防しましょう。</div>
+        </div>
+
+        <div class="guide-item">
+            <div class="guide-title">🍂 葉が黄色くなってきた時の原因</div>
+            <div class="guide-desc">肥料不足（特に窒素不足）や根腐れ（水の与えすぎ）が原因のことが多いです。土の湿り気を確認し、必要に応じて追肥を行います。</div>
+        </div>
+
+        <div class="guide-item">
+            <div class="guide-title">🔄 連作障害（同じ科の連続栽培）を防ぐ</div>
+            <div class="guide-desc">ナス科（トマト、ナス、ピーマン等）やウリ科（キュウリ、カボチャ）は同じ場所に続けて植えると病気になりやすくなります。年ごとに育てる場所を変えましょう。</div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -224,89 +496,218 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 今日の日付を初期値として設定
+    // 今日の日付を初期セット
     document.getElementById('date').valueAsDate = new Date();
 
-    const journalForm = document.getElementById('journal-form');
-    const journalList = document.getElementById('journal-list');
+    // ユーザー名の保存・復元 (localStorage)
+    const usernameInput = document.getElementById('username');
+    if (localStorage.getItem('crop_app_username')) {
+        usernameInput.value = localStorage.getItem('crop_app_username');
+    }
+    usernameInput.addEventListener('change', () => {
+        localStorage.setItem('crop_app_username', usernameInput.value.trim() || 'ななしの農家');
+    });
 
-    // 日誌の保存処理
+    // タブ切り替え関数
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // フォーム送信（新規作成 ＆ 編集）
+    const journalForm = document.getElementById('journal-form');
     journalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const editingId = document.getElementById('editing-id').value;
+        const userName = usernameInput.value.trim() || 'ななしの農家';
         const date = document.getElementById('date').value;
-        const crop = document.getElementById('crop').value;
+        const crop = document.getElementById('crop').value.trim();
         const category = document.getElementById('category').value;
-        const notes = document.getElementById('notes').value;
+        const harvestQty = document.getElementById('harvest-qty').value;
+        const notes = document.getElementById('notes').value.trim();
+
+        const journalData = {
+            userName: userName,
+            date: date,
+            crop: crop,
+            category: category,
+            harvestQty: harvestQty ? Number(harvestQty) : null,
+            notes: notes,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
         try {
-            await db.collection('crop_journals').add({
-                date: date,
-                crop: crop,
-                category: category,
-                notes: notes,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // フォームリセット（日付は維持）
-            document.getElementById('crop').value = '';
-            document.getElementById('notes').value = '';
-            alert('日誌を記録しました！');
+            if (editingId) {
+                // 編集更新
+                await db.collection('crop_journals').doc(editingId).update(journalData);
+                alert('日誌を更新しました！');
+            } else {
+                // 新規保存
+                journalData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('crop_journals').add(journalData);
+                alert('日誌を記録しました！');
+            }
+            resetForm();
         } catch (error) {
-            console.error("データの保存エラー: ", error);
-            alert('保存に失敗しました。Firestoreのパーミッション設定を確認してください。');
+            console.error("保存エラー: ", error);
+            alert('保存に失敗しました。Firestoreのルール等をご確認ください。');
         }
     });
 
-    // データのリアルタイム取得・表示
-    db.collection('crop_journals')
-        .orderBy('date', 'desc')
-        .onSnapshot((snapshot) => {
-            journalList.innerHTML = '';
+    // フォームのリセット
+    function resetForm() {
+        document.getElementById('editing-id').value = '';
+        document.getElementById('crop').value = '';
+        document.getElementById('harvest-qty').value = '';
+        document.getElementById('notes').value = '';
+        document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('form-title').innerText = '新規日誌の記入';
+        document.getElementById('submit-btn').innerText = '日誌を保存する';
+        document.getElementById('cancel-btn').style.display = 'none';
+    }
 
-            if (snapshot.empty) {
-                journalList.innerHTML = '<div class="card empty-message">まだ記録がありません。</div>';
-                return;
-            }
+    // 編集モードへの切り替え
+    function editJournal(id, date, crop, category, harvestQty, notes) {
+        document.getElementById('editing-id').value = id;
+        document.getElementById('date').value = date;
+        document.getElementById('crop').value = crop;
+        document.getElementById('category').value = category;
+        document.getElementById('harvest-qty').value = harvestQty || '';
+        document.getElementById('notes').value = notes;
 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const card = document.createElement('div');
-                card.className = 'card journal-item';
+        document.getElementById('form-title').innerText = '✏️ 日誌の編集';
+        document.getElementById('submit-btn').innerText = '変更を更新する';
+        document.getElementById('cancel-btn').style.display = 'block';
 
-                card.innerHTML = `
-                    <div class="journal-header">
-                        <span class="crop-badge">${escapeHtml(data.crop)}</span>
-                        <span class="journal-date">${escapeHtml(data.date)}</span>
-                    </div>
-                    <span class="journal-category">${escapeHtml(data.category)}</span>
-                    <div class="journal-content">${escapeHtml(data.notes)}</div>
-                    <button class="btn-delete" onclick="deleteJournal('${doc.id}')">削除</button>
-                `;
+        switchTab('my-tab');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
-                journalList.appendChild(card);
-            });
-        });
-
-    // 日誌の削除処理
+    // 削除機能
     async function deleteJournal(id) {
-        if (confirm('この記録を削除してもよろしいですか？')) {
+        if (confirm('本当にこの記録を削除しますか？')) {
             try {
                 await db.collection('crop_journals').doc(id).delete();
             } catch (error) {
-                console.error("削除エラー: ", error);
+                console.error("削除エラー:", error);
                 alert('削除に失敗しました。');
             }
         }
     }
 
-    // XSS対策のエスケープ関数
+    // リアルタイムデータ同期 & 表示処理
+    db.collection('crop_journals')
+        .orderBy('date', 'desc')
+        .onSnapshot((snapshot) => {
+            const myJournalList = document.getElementById('my-journal-list');
+            const communityJournalList = document.getElementById('community-journal-list');
+            const rankingList = document.getElementById('ranking-list');
+
+            myJournalList.innerHTML = '';
+            communityJournalList.innerHTML = '';
+            
+            const currentUserName = usernameInput.value.trim() || 'ななしの農家';
+            const cropCounts = {};
+
+            if (snapshot.empty) {
+                myJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">まだ記録がありません。</div>';
+                communityJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">投稿された記録はありません。</div>';
+                rankingList.innerHTML = '<div class="card" style="text-align:center; color:#666;">データが集計されていません。</div>';
+                return;
+            }
+
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                const docId = doc.id;
+
+                // 集計（ランキング用）
+                if (data.crop) {
+                    cropCounts[data.crop] = (cropCounts[data.crop] || 0) + 1;
+                }
+
+                // 収穫表示テキスト
+                const harvestText = data.harvestQty ? ` ｜ 収穫: ${data.harvestQty}` : '';
+
+                // 日誌カード HTML 生成
+                const createCardHTML = (isMine) => `
+                    <div class="card journal-item">
+                        <div class="journal-header">
+                            <span class="crop-badge">${escapeHtml(data.crop)}</span>
+                            <span class="journal-author">👤 ${escapeHtml(data.userName || '匿名')}</span>
+                        </div>
+                        <div class="journal-meta">
+                            <span>📅 ${escapeHtml(data.date)}</span>
+                            <span class="category-tag">${escapeHtml(data.category)}</span>
+                            ${harvestText ? `<span style="color:#d97706; font-weight:bold;">${harvestText}</span>` : ''}
+                        </div>
+                        <div class="journal-content">${escapeHtml(data.notes)}</div>
+                        ${isMine ? `
+                            <div class="action-btns">
+                                <button class="btn-action btn-edit" onclick="editJournal('${docId}', '${escapeHtml(data.date)}', '${escapeHtml(data.crop)}', '${escapeHtml(data.category)}', '${data.harvestQty \vert{}\vert{} ''}', '${escapeHtml(data.notes)}')">編集</button>
+                                <button class="btn-action btn-delete" onclick="deleteJournal('${docId}')">削除</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                // 自分の投稿
+                if (data.userName === currentUserName) {
+                    myJournalList.innerHTML += createCardHTML(true);
+                }
+
+                // コミュニティ（全投稿）
+                communityJournalList.innerHTML += createCardHTML(data.userName === currentUserName);
+            });
+
+            if (!myJournalList.innerHTML) {
+                myJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">あなたの投稿はまだありません。</div>';
+            }
+
+            // ランキングの描画
+            renderRanking(cropCounts);
+        });
+
+    // ランキング描画関数
+    function renderRanking(cropCounts) {
+        const rankingList = document.getElementById('ranking-list');
+        rankingList.innerHTML = '';
+
+        const sortedCrops = Object.keys(cropCounts).sort((a, b) => cropCounts[b] - cropCounts[a]);
+
+        if (sortedCrops.length === 0) {
+            rankingList.innerHTML = '<div class="card" style="text-align:center; color:#666;">データがありません。</div>';
+            return;
+        }
+
+        sortedCrops.forEach((crop, index) => {
+            const rank = index + 1;
+            let badgeClass = 'rank-other';
+            if (rank === 1) badgeClass = 'rank-1';
+            else if (rank === 2) badgeClass = 'rank-2';
+            else if (rank === 3) badgeClass = 'rank-3';
+
+            const item = document.createElement('div');
+            item.className = 'ranking-item';
+            item.innerHTML = `
+                <div class="ranking-badge ${badgeClass}">${rank}</div>
+                <div class="ranking-name">${escapeHtml(crop)}</div>
+                <div class="ranking-count">${cropCounts[crop]} 記録</div>
+            `;
+            rankingList.appendChild(item);
+        });
+    }
+
+    // XSS対策用エスケープ
     function escapeHtml(str) {
         if (!str) return '';
-        return str
+        return String(str)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
+            .replace/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
