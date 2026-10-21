@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スマート農作物 栽培日誌 & コミュニティ</title>
+    <title>スマート農作物 栽培日誌 & 総合サポート</title>
     <!-- Firebase SDK (v10 compat) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -18,6 +18,7 @@
             --text-color: #1b263b;
             --danger-color: #e63946;
             --warning-color: #e9c46a;
+            --info-color: #219ebc;
         }
 
         * {
@@ -30,7 +31,7 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding-bottom: 70px; /* スマホ用固定ナビゲーションの余白 */
+            padding-bottom: 70px;
             line-height: 1.6;
         }
 
@@ -55,9 +56,29 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             padding: 15px;
+        }
+
+        /* ユーザー設定 */
+        .user-setting-box {
+            background-color: var(--accent-color);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .user-setting-box input {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #b7e4c7;
+            font-size: 0.9rem;
+            flex: 1;
         }
 
         /* タブナビゲーション */
@@ -68,16 +89,19 @@
             padding: 5px;
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 10px 5px;
+            min-width: 100px;
+            padding: 10px 8px;
             border: none;
             background: none;
             font-weight: bold;
-            font-size: 0.9rem;
-            color: #666;
+            font-size: 0.85rem;
+            color: #555;
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -106,26 +130,6 @@
             margin-bottom: 16px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.04);
             border-left: 5px solid var(--primary-color);
-        }
-
-        /* ユーザー設定 */
-        .user-setting-box {
-            background-color: var(--accent-color);
-            padding: 12px 16px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-        }
-
-        .user-setting-box input {
-            padding: 6px 10px;
-            border-radius: 6px;
-            border: 1px solid #b7e4c7;
-            font-size: 0.9rem;
-            flex: 1;
         }
 
         /* フォーム要素 */
@@ -201,12 +205,184 @@
             display: none;
         }
 
-        /* ランキングセクション */
+        /* ----------------------------------
+           📅 カレンダー スタイル
+        ---------------------------------- */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-header h3 {
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+
+        .btn-month {
+            background-color: var(--accent-color);
+            color: var(--primary-color);
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            background-color: #e0e0e0;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day-header {
+            background-color: #2d6a4f;
+            color: white;
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .calendar-day-cell {
+            background-color: white;
+            min-height: 65px;
+            padding: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .calendar-day-cell:hover {
+            background-color: #f1f8e9;
+        }
+
+        .calendar-day-cell.empty {
+            background-color: #fafafa;
+            cursor: default;
+        }
+
+        .calendar-day-num {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .calendar-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin-top: 2px;
+        }
+
+        .cal-badge {
+            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 4px;
+            color: white;
+            background-color: var(--primary-light);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        /* ----------------------------------
+           💬 掲示板 スタイル (写真付き)
+        ---------------------------------- */
+        .preview-img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+            object-fit: cover;
+        }
+
+        .board-img {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .board-card {
+            border-left: 5px solid var(--info-color);
+        }
+
+        .reply-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .reply-item {
+            border-bottom: 1px solid #dee2e6;
+            padding: 8px 0;
+            font-size: 0.88rem;
+        }
+
+        .reply-item:last-child {
+            border-bottom: none;
+        }
+
+        .reply-author {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.8rem;
+        }
+
+        /* ----------------------------------
+           🐛 病害虫ガイド スタイル
+        ---------------------------------- */
+        .pest-search-box {
+            margin-bottom: 15px;
+        }
+
+        .pest-card {
+            border-left: 5px solid var(--danger-color);
+        }
+
+        .pest-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--danger-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pest-tag {
+            font-size: 0.75rem;
+            background-color: #ffccd5;
+            color: #c9184a;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .pest-section-title {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            margin-top: 8px;
+        }
+
+        /* 🏆 ランキング */
         .ranking-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 20px;
         }
 
         .ranking-item {
@@ -219,8 +395,8 @@
         }
 
         .ranking-badge {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -236,26 +412,7 @@
         .rank-3 { background-color: #219ebc; }
         .rank-other { background-color: #8d99ae; }
 
-        .ranking-name {
-            font-weight: bold;
-            flex: 1;
-        }
-
-        .ranking-count {
-            font-size: 0.85rem;
-            background-color: var(--accent-color);
-            color: var(--primary-color);
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-weight: bold;
-        }
-
-        /* タイムライン／日誌カード */
-        .journal-item {
-            position: relative;
-            border-left: 5px solid var(--primary-light);
-        }
-
+        /* 共通日誌カード */
         .journal-header {
             display: flex;
             justify-content: space-between;
@@ -315,84 +472,45 @@
             cursor: pointer;
             font-size: 0.8rem;
             font-weight: bold;
-            transition: opacity 0.2s;
         }
 
-        .btn-edit {
-            background-color: var(--warning-color);
-            color: #333;
-        }
+        .btn-edit { background-color: var(--warning-color); color: #333; }
+        .btn-delete { background-color: var(--danger-color); color: white; }
 
-        .btn-delete {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        /* トラブル解決ガイド（知恵袋） */
-        .guide-item {
-            background: white;
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 10px;
-            border: 1px solid #e0e0e0;
-        }
-
-        .guide-title {
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .guide-desc {
-            font-size: 0.9rem;
-            color: #444;
-        }
-
-        /* レスポンシブ（スマホ向け調整） */
+        /* レスポンシブ調整 */
         @media (max-width: 600px) {
-            body {
-                padding: 10px 10px 70px 10px;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .tab-btn {
-                font-size: 0.8rem;
-                padding: 8px 2px;
-            }
+            body { padding: 10px 10px 70px 10px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .calendar-day-cell { min-height: 50px; font-size: 0.75rem; }
+            .cal-badge { font-size: 0.55rem; padding: 0 2px; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>🌱 スマート農作物 栽培日誌</h1>
+    <h1>🌱 スマート農作物 栽培日誌 & 支援</h1>
 </header>
 
 <div class="container">
     <!-- ユーザー名設定 -->
     <div class="user-setting-box">
         <span>👤 ユーザー名:</span>
-        <input type="text" id="username" placeholder="ニックネーム（例: トマト太郎）" value="ななしの農家">
+        <input type="text" id="username" placeholder="例: トモリ農園" value="ななしの農家">
     </div>
 
     <!-- タブメニュー -->
     <div class="tab-nav">
         <button class="tab-btn active" onclick="switchTab('my-tab')">📝 日誌をつける</button>
+        <button class="tab-btn" onclick="switchTab('calendar-tab')">📅 カレンダー</button>
+        <button class="tab-btn" onclick="switchTab('board-tab')">💬 相談掲示板</button>
         <button class="tab-btn" onclick="switchTab('community-tab')">🌍 みんなの記録</button>
         <button class="tab-btn" onclick="switchTab('ranking-tab')">🏆 人気作物</button>
-        <button class="tab-btn" onclick="switchTab('guide-tab')">💡 栽培の知恵袋</button>
+        <button class="tab-btn" onclick="switchTab('pest-tab')">🐛 病害虫ガイド</button>
     </div>
 
     <!-- TAB 1: 自分の日誌投稿・記録一覧 -->
     <div id="my-tab" class="tab-content active">
-        <!-- 投稿・編集フォーム -->
         <div class="card">
             <h2 id="form-title" style="font-size: 1.1rem; margin-bottom: 12px; color: var(--primary-color);">新規日誌の記入</h2>
             <form id="journal-form">
@@ -413,7 +531,7 @@
                         <label for="category">作業分類</label>
                         <select id="category">
                             <option value="水やり">💧 水やり</option>
-                            <option value="施肥・土作り">肥料・土作り</option>
+                            <option value="施肥・土作り">🧪 肥料・土作り</option>
                             <option value="芽かき・手入れ">✂️ 芽かき・剪定</option>
                             <option value="病害虫対策">🐛 病害虫対策</option>
                             <option value="収穫">🧺 収穫</option>
@@ -436,48 +554,83 @@
             </form>
         </div>
 
-        <!-- 自分の日誌一覧 -->
         <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">📖 自分の投稿履歴</h3>
         <div id="my-journal-list"></div>
     </div>
 
-    <!-- TAB 2: コミュニティ（みんなの記録） -->
+    <!-- TAB 2: カレンダー機能 -->
+    <div id="calendar-tab" class="tab-content">
+        <div class="card">
+            <div class="calendar-header">
+                <button class="btn-month" onclick="changeMonth(-1)">◀ 前月</button>
+                <h3 id="calendar-month-year"></h3>
+                <button class="btn-month" onclick="changeMonth(1)">次月 ▶</button>
+            </div>
+            <div id="calendar-grid" class="calendar-grid"></div>
+        </div>
+
+        <h3 id="selected-date-title" style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">📅 選択した日の記録</h3>
+        <div id="selected-date-journals">
+            <div class="card" style="text-align:center; color:#666;">カレンダーの日付をクリックすると、その日の記録が表示されます。</div>
+        </div>
+    </div>
+
+    <!-- TAB 3: 困った人のための掲示板 (写真投稿可能) -->
+    <div id="board-tab" class="tab-content">
+        <div class="card">
+            <h2 style="font-size: 1.1rem; margin-bottom: 12px; color: var(--info-color);">❓ 栽培の悩みを写真付きで質問する</h2>
+            <form id="board-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="board-crop">対象の作物</label>
+                        <input type="text" id="board-crop" placeholder="例: イチゴ、キュウリ" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="board-title">相談タイトル</label>
+                        <input type="text" id="board-title" placeholder="例: 葉に白い斑点ができてしまいました" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="board-content">詳しい状況・困っていること</label>
+                    <textarea id="board-content" rows="3" placeholder="いつから発症したか、水やりや日当たりの状況などを入力..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="board-image">📷 写真を添付（任意）</label>
+                    <input type="file" id="board-image" accept="image/*" onchange="previewImage(event)">
+                    <img id="image-preview" class="preview-img" alt="プレビュー">
+                </div>
+
+                <button type="submit" class="btn-submit" style="background-color: var(--info-color);">質問を投稿する</button>
+            </form>
+        </div>
+
+        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--info-color);">💬 みんなのお悩み・質問掲示板</h3>
+        <div id="board-posts-list"></div>
+    </div>
+
+    <!-- TAB 4: コミュニティ（みんなの記録） -->
     <div id="community-tab" class="tab-content">
         <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">🌍 全ユーザーのリアルタイム栽培日誌</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">他の栽培者がどんなお世話をしているか参考にしてみましょう！</p>
         <div id="community-journal-list"></div>
     </div>
 
-    <!-- TAB 3: 人気作物ランキング -->
+    <!-- TAB 5: 人気作物ランキング -->
     <div id="ranking-tab" class="tab-content">
         <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">🏆 今みんなが育てている作物ランキング</h3>
-        <p style="font-size: 0.85rem; color: #666; margin-bottom: 15px;">投稿数から算出された人気の作物一覧です。</p>
         <div id="ranking-list" class="ranking-container"></div>
     </div>
 
-    <!-- TAB 4: 栽培の課題解決ガイド（知恵袋） -->
-    <div id="guide-tab" class="tab-content">
-        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--primary-color);">💡 農業・園芸のよくある課題解決ガイド</h3>
+    <!-- TAB 6: 病害虫対処法ガイド -->
+    <div id="pest-tab" class="tab-content">
+        <h3 style="margin-bottom: 10px; font-size: 1rem; color: var(--danger-color);">🐛 病害虫・トラブル対処法ガイド</h3>
         
-        <div class="guide-item">
-            <div class="guide-title">💧 水やりの適切なタイミングは？</div>
-            <div class="guide-desc">「土の表面が乾いたら鉢底から水が流れ出るまでたっぷり」が基本です。朝のうちに与えることで、昼間の蒸れや病気の予防になります。</div>
+        <div class="pest-search-box">
+            <input type="text" id="pest-search" placeholder="🔍 病気や虫の名前・症状で検索 (例: うどんこ病、葉が黄色)..." oninput="filterPests()">
         </div>
 
-        <div class="guide-item">
-            <div class="guide-title">🐛 アブラムシ・害虫がついた時の対策</div>
-            <div class="guide-desc">初期段階であれば粘着テープで取り除くか、薄めた石鹸水や粘着質のシートを設置。風通しを良くして予防しましょう。</div>
-        </div>
-
-        <div class="guide-item">
-            <div class="guide-title">🍂 葉が黄色くなってきた時の原因</div>
-            <div class="guide-desc">肥料不足（特に窒素不足）や根腐れ（水の与えすぎ）が原因のことが多いです。土の湿り気を確認し、必要に応じて追肥を行います。</div>
-        </div>
-
-        <div class="guide-item">
-            <div class="guide-title">🔄 連作障害（同じ科の連続栽培）を防ぐ</div>
-            <div class="guide-desc">ナス科（トマト、ナス、ピーマン等）やウリ科（キュウリ、カボチャ）は同じ場所に続けて植えると病気になりやすくなります。年ごとに育てる場所を変えましょう。</div>
-        </div>
+        <div id="pest-list"></div>
     </div>
 </div>
 
@@ -492,14 +645,13 @@
         appId: "1:920132069499:web:09cad0185af88a4e2adade"
     };
 
-    // Firebase 初期化
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     // 今日の日付を初期セット
     document.getElementById('date').valueAsDate = new Date();
 
-    // ユーザー名の保存・復元 (localStorage)
+    // ユーザー名の保持
     const usernameInput = document.getElementById('username');
     if (localStorage.getItem('crop_app_username')) {
         usernameInput.value = localStorage.getItem('crop_app_username');
@@ -508,16 +660,28 @@
         localStorage.setItem('crop_app_username', usernameInput.value.trim() || 'ななしの農家');
     });
 
-    // タブ切り替え関数
+    // グローバル変数
+    let allJournals = [];
+    let currentCalYear = new Date().getFullYear();
+    let currentCalMonth = new Date().getMonth();
+    let currentBase64Image = "";
+
+    // タブ切り替え
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         
         document.getElementById(tabId).classList.add('active');
         event.currentTarget.classList.add('active');
+
+        if (tabId === 'calendar-tab') {
+            renderCalendar();
+        }
     }
 
-    // フォーム送信（新規作成 ＆ 編集）
+    // ----------------------------------------
+    // 📝 日誌保存・編集・削除処理
+    // ----------------------------------------
     const journalForm = document.getElementById('journal-form');
     journalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -542,11 +706,9 @@
 
         try {
             if (editingId) {
-                // 編集更新
                 await db.collection('crop_journals').doc(editingId).update(journalData);
                 alert('日誌を更新しました！');
             } else {
-                // 新規保存
                 journalData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
                 await db.collection('crop_journals').add(journalData);
                 alert('日誌を記録しました！');
@@ -554,11 +716,10 @@
             resetForm();
         } catch (error) {
             console.error("保存エラー: ", error);
-            alert('保存に失敗しました。Firestoreのルール等をご確認ください。');
+            alert('保存に失敗しました。');
         }
     });
 
-    // フォームのリセット
     function resetForm() {
         document.getElementById('editing-id').value = '';
         document.getElementById('crop').value = '';
@@ -570,7 +731,6 @@
         document.getElementById('cancel-btn').style.display = 'none';
     }
 
-    // 編集モードへの切り替え
     function editJournal(id, date, crop, category, harvestQty, notes) {
         document.getElementById('editing-id').value = id;
         document.getElementById('date').value = date;
@@ -587,131 +747,68 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 削除機能
     async function deleteJournal(id) {
         if (confirm('本当にこの記録を削除しますか？')) {
             try {
                 await db.collection('crop_journals').doc(id).delete();
             } catch (error) {
                 console.error("削除エラー:", error);
-                alert('削除に失敗しました。');
             }
         }
     }
 
-    // リアルタイムデータ同期 & 表示処理
-    db.collection('crop_journals')
-        .orderBy('date', 'desc')
-        .onSnapshot((snapshot) => {
-            const myJournalList = document.getElementById('my-journal-list');
-            const communityJournalList = document.getElementById('community-journal-list');
-            const rankingList = document.getElementById('ranking-list');
+    // ----------------------------------------
+    // 📅 カレンダー描画機能
+    // ----------------------------------------
+    function changeMonth(offset) {
+        currentCalMonth += offset;
+        if (currentCalMonth < 0) {
+            currentCalMonth = 11;
+            currentCalYear--;
+        } else if (currentCalMonth > 11) {
+            currentCalMonth = 0;
+            currentCalYear++;
+        }
+        renderCalendar();
+    }
 
-            myJournalList.innerHTML = '';
-            communityJournalList.innerHTML = '';
-            
-            const currentUserName = usernameInput.value.trim() || 'ななしの農家';
-            const cropCounts = {};
+    function renderCalendar() {
+        const titleEl = document.getElementById('calendar-month-year');
+        const gridEl = document.getElementById('calendar-grid');
+        
+        titleEl.innerText = `${currentCalYear}年 ${currentCalMonth + 1}月`;
+        gridEl.innerHTML = '';
 
-            if (snapshot.empty) {
-                myJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">まだ記録がありません。</div>';
-                communityJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">投稿された記録はありません。</div>';
-                rankingList.innerHTML = '<div class="card" style="text-align:center; color:#666;">データが集計されていません。</div>';
-                return;
-            }
+        const daysOfWeek = ['日', '月', '火', '水', '木', '金', '土'];
+        daysOfWeek.forEach(d => {
+            gridEl.innerHTML += `<div class="calendar-day-header">${d}</div>`;
+        });
 
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                const docId = doc.id;
+        const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
+        const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
 
-                // 集計（ランキング用）
-                if (data.crop) {
-                    cropCounts[data.crop] = (cropCounts[data.crop] || 0) + 1;
-                }
+        // 空白セル
+        for (let i = 0; i < firstDay; i++) {
+            gridEl.innerHTML += `<div class="calendar-day-cell empty"></div>`;
+        }
 
-                // 収穫表示テキスト
-                const harvestText = data.harvestQty ? ` ｜ 収穫: ${data.harvestQty}` : '';
+        // 日付セル
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateString = `${currentCalYear}-${String(currentCalMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayJournals = allJournals.filter(j => j.date === dateString);
 
-                // 日誌カード HTML 生成
-                const createCardHTML = (isMine) => `
-                    <div class="card journal-item">
-                        <div class="journal-header">
-                            <span class="crop-badge">${escapeHtml(data.crop)}</span>
-                            <span class="journal-author">👤 ${escapeHtml(data.userName || '匿名')}</span>
-                        </div>
-                        <div class="journal-meta">
-                            <span>📅 ${escapeHtml(data.date)}</span>
-                            <span class="category-tag">${escapeHtml(data.category)}</span>
-                            ${harvestText ? `<span style="color:#d97706; font-weight:bold;">${harvestText}</span>` : ''}
-                        </div>
-                        <div class="journal-content">${escapeHtml(data.notes)}</div>
-                        ${isMine ? `
-                            <div class="action-btns">
-                                <button class="btn-action btn-edit" onclick="editJournal('${docId}', '${escapeHtml(data.date)}', '${escapeHtml(data.crop)}', '${escapeHtml(data.category)}', '${data.harvestQty \vert{}\vert{} ''}', '${escapeHtml(data.notes)}')">編集</button>
-                                <button class="btn-action btn-delete" onclick="deleteJournal('${docId}')">削除</button>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-
-                // 自分の投稿
-                if (data.userName === currentUserName) {
-                    myJournalList.innerHTML += createCardHTML(true);
-                }
-
-                // コミュニティ（全投稿）
-                communityJournalList.innerHTML += createCardHTML(data.userName === currentUserName);
+            let badgesHtml = '';
+            dayJournals.forEach(j => {
+                badgesHtml += `<div class="cal-badge">${escapeHtml(j.crop)}</div>`;
             });
 
-            if (!myJournalList.innerHTML) {
-                myJournalList.innerHTML = '<div class="card" style="text-align:center; color:#666;">あなたの投稿はまだありません。</div>';
-            }
-
-            // ランキングの描画
-            renderRanking(cropCounts);
-        });
-
-    // ランキング描画関数
-    function renderRanking(cropCounts) {
-        const rankingList = document.getElementById('ranking-list');
-        rankingList.innerHTML = '';
-
-        const sortedCrops = Object.keys(cropCounts).sort((a, b) => cropCounts[b] - cropCounts[a]);
-
-        if (sortedCrops.length === 0) {
-            rankingList.innerHTML = '<div class="card" style="text-align:center; color:#666;">データがありません。</div>';
-            return;
-        }
-
-        sortedCrops.forEach((crop, index) => {
-            const rank = index + 1;
-            let badgeClass = 'rank-other';
-            if (rank === 1) badgeClass = 'rank-1';
-            else if (rank === 2) badgeClass = 'rank-2';
-            else if (rank === 3) badgeClass = 'rank-3';
-
-            const item = document.createElement('div');
-            item.className = 'ranking-item';
-            item.innerHTML = `
-                <div class="ranking-badge ${badgeClass}">${rank}</div>
-                <div class="ranking-name">${escapeHtml(crop)}</div>
-                <div class="ranking-count">${cropCounts[crop]} 記録</div>
+            gridEl.innerHTML += `
+                <div class="calendar-day-cell" onclick="showDateJournals('${dateString}')">
+                    <span class="calendar-day-num">${day}</span>
+                    <div class="calendar-badges">${badgesHtml}</div>
+                </div>
             `;
-            rankingList.appendChild(item);
-        });
+        }
     }
 
-    // XSS対策用エスケープ
-    function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-</script>
-
-</body>
-</html>
+    function showDateJournals(dateStr) {
